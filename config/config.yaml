@@ -1,0 +1,107 @@
+# AI Voice Inputer 配置文件
+# Ubuntu 24.04 AI 语音输入法
+
+# ASR (语音识别) 配置
+asr:
+  # 模型选择: tiny, base, small, medium, large-v3
+  # tiny/base: CPU适用, 速度快但精度低
+  # small: CPU/GPU均可, 平衡选择
+  # medium: GPU推荐, 精度较高
+  # large-v3: GPU必须, 最高精度
+  model: "small"
+  
+  # 设备选择: auto, cpu, cuda
+  device: "cpu"
+  
+  # 计算类型: int8, float16, float32
+  # int8: 最快, 精度略低
+  # float16: GPU推荐
+  # float32: 最高精度但最慢
+  compute_type: "int8"
+  
+  # 语言设置
+  language: "zh"
+  
+  # VAD (语音活动检测) 配置
+  vad:
+    enabled: true
+    # 静音阈值 (秒)
+    silence_threshold: 0.5
+    # 最小语音长度 (秒)
+    min_speech_duration: 0.3
+
+# 音频配置
+audio:
+  # 采样率 (Whisper 需要 16000)
+  sample_rate: 16000
+  # 声道数
+  channels: 1
+  # 录音块大小 (毫秒)
+  chunk_duration_ms: 100
+
+# 热键配置
+hotkey:
+  # 组合键定义
+  # 按住这些键开始录音，松开任意一个键停止录音并识别
+  keys:
+    - "ctrl"
+    - "cmd"  # Win/Super 键
+  
+  # 是否显示按键状态提示
+  show_status: true
+
+# 文字输入配置
+input:
+  # 输入方式: xdotool, ydotool, fcitx5
+  # xdotool: X11 环境推荐
+  # ydotool: Wayland 环境推荐
+  # fcitx5: 输入法引擎模式 (需要额外配置)
+  method: "xdotool"
+  
+  # 输入延迟 (毫秒), 防止丢字
+  delay_ms: 5
+
+# LLM 增强配置 (可选)
+llm:
+  # 是否启用 LLM 文本增强
+  enabled: false
+  
+  # API 端点 (本地 vLLM 或远程 API)
+  api_url: "http://localhost:8000/v1/chat/completions"
+  
+  # 模型名称
+  model: "qwen2.5-7b"
+  
+  # API 密钥 (如果需要)
+  api_key: ""
+  
+  # 超时时间 (秒)
+  timeout: 5
+  
+  # 增强提示词
+  prompt: |
+    请修正以下语音转写结果，使其符合书面表达规范：
+    1. 添加正确的标点符号
+    2. 修正同音错别字
+    3. 修正技术术语的拼写
+    4. 保持原意不变
+    
+    语音转写结果：{text}
+    
+    修正后的文本：
+
+# 日志配置
+logging:
+  # 日志级别: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  
+  # 日志文件路径 (留空则只输出到控制台)
+  file: "~/.local/share/ai-voice-inputer/logs/voice-inputer.log"
+
+# 通知配置
+notification:
+  # 是否显示桌面通知
+  enabled: true
+  
+  # 通知方式: notify-send, libnotify
+  method: "notify-send"

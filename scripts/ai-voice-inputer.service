@@ -1,0 +1,14 @@
+[Unit]
+Description=AI Voice Inputer - Ubuntu AI 语音输入法
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/wzx/桌面/voice-inputer/ai-voice-inputer/run.sh
+Restart=on-failure
+RestartSec=5
+Environment=DISPLAY=:0
+
+[Install]
+WantedBy=default.target
