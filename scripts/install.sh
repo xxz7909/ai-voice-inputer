@@ -191,14 +191,22 @@ echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     SERVICE_DIR="$HOME/.config/systemd/user"
     mkdir -p "$SERVICE_DIR"
-    
+
+    # DISPLAY/XAUTHORITY 必须在安装时从当前桌面会话捕获,
+    # 否则服务启动后无法连接 X server, 热键监听和文字输入都会失效
+    SERVICE_DISPLAY="${DISPLAY:-:0}"
+    SERVICE_XAUTHORITY="${XAUTHORITY:-%h/.Xauthority}"
+
     cat > "$SERVICE_DIR/ai-voice-inputer.service" << EOF
 [Unit]
 Description=AI Voice Inputer - Ubuntu AI 语音输入法
 After=graphical-session.target
+PartOf=graphical-session.target
 
 [Service]
 Type=simple
+Environment=DISPLAY=$SERVICE_DISPLAY
+Environment=XAUTHORITY=$SERVICE_XAUTHORITY
 ExecStart=$LAUNCHER
 Restart=on-failure
 RestartSec=5
@@ -209,9 +217,13 @@ EOF
 
     systemctl --user daemon-reload
     print_success "systemd 服务创建完成"
+    print_info "已写入 DISPLAY=$SERVICE_DISPLAY"
     print_info "启用开机自启: systemctl --user enable ai-voice-inputer"
     print_info "启动服务: systemctl --user start ai-voice-inputer"
     print_info "查看状态: systemctl --user status ai-voice-inputer"
+    print_info "若切换登录会话后失效, 执行:"
+    print_info "  systemctl --user import-environment DISPLAY XAUTHORITY"
+    print_info "  systemctl --user restart ai-voice-inputer"
 else
     print_warning "跳过系统服务创建"
 fi

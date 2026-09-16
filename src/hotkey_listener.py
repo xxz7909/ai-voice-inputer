@@ -3,10 +3,21 @@
 监听 Win+Ctrl 组合键来触发语音输入
 """
 
-from pynput import keyboard
-from typing import Callable, Set, Optional
+import os
 import threading
 import logging
+from typing import Callable, Set, Optional
+
+# pynput 在 import 阶段就会连接 X server, 失败时给出更明确的提示
+try:
+    from pynput import keyboard
+except ImportError as e:
+    raise ImportError(
+        "无法加载键盘监听模块 (pynput), 通常是 DISPLAY/XAUTHORITY 无效导致:\n"
+        f"  DISPLAY={os.environ.get('DISPLAY', '(未设置)')}\n"
+        f"  XAUTHORITY={os.environ.get('XAUTHORITY', '(未设置)')}\n"
+        f"  原始错误: {e}"
+    ) from e
 
 logger = logging.getLogger(__name__)
 

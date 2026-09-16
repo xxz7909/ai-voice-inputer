@@ -58,6 +58,9 @@ chmod +x scripts/install.sh
 
 或使用应用菜单中的 "AI Voice Inputer" 启动。
 
+> 首次启动会从 HuggingFace 下载模型，国内网络建议使用镜像预先下载：
+> `HF_ENDPOINT=https://hf-mirror.com ./run.sh`
+
 ### 4. 使用
 
 1. 将光标放到任意输入框
@@ -77,6 +80,11 @@ asr:
   model: "medium"
   device: "auto"  # auto, cpu, cuda
   language: "zh"
+  vad:
+    enabled: true
+    # VAD 语音判定阈值 (0~1): 越大越严格
+    # 识别经常为空/丢字时调小, 环境噪声大时调大
+    silence_threshold: 0.3
 ```
 
 ### 热键配置
@@ -97,6 +105,15 @@ llm:
   enabled: true
   api_url: "http://localhost:8000/v1/chat/completions"
   model: "qwen2.5-7b"
+```
+
+### 桌面通知 (可选)
+
+默认关闭，识别过程中不弹任何提示，只把文字输入到光标处。若需要录音/识别状态提示：
+
+```yaml
+notification:
+  enabled: true
 ```
 
 ## 📁 项目结构
@@ -208,6 +225,55 @@ hotkey:
     - "ctrl"
     - "alt"
 ```
+
+### 5. 启动卡在「正在加载语音识别模型」
+
+程序启动时会先检查模型缓存。如果本地已有缓存但网络无法访问 `huggingface.co`
+（国内网络常见），旧版本会一直卡住。当前版本已改为**优先使用本地缓存**，
+正常应在 1~2 秒内加载完成。
+
+更换模型（如 `small` → `large-v3`）时需要使用镜像预先下载：
+
+```bash
+HF_ENDPOINT=https://hf-mirror.com python -c \
+  "from faster_whisper.utils import download_model; print(download_model('large-v3'))"
+```
+
+下载完成后再次启动即可离线加载。
+
+### 6. 启动报 DISPLAY / X server 错误
+
+热键监听 (pynput)、文字输入 (xdotool) 和桌面通知都依赖 X11。如果看到
+「无法连接 X11 显示器」或「无法加载键盘监听模块」，说明 `DISPLAY` 不可用：
+
+- 程序会自动扫描 `/tmp/.X11-unix` 并切换到可用的显示器，多数情况可自愈；
+- 若使用 systemd 自启，`DISPLAY`/`XAUTHORITY` 会由 `install.sh` 按安装时的
+  会话写入。切换登录会话后失效可执行：
+
+```bash
+systemctl --user import-environment DISPLAY XAUTHORITY
+systemctl --user restart ai-voice-inputer
+```
+
+### 7. 不说话也会自动上屏一段文字
+
+Whisper 在静音或纯噪声上会产生幻觉文本（例如「字幕by索兰娅」）。程序默认先做
+三层判断，任何一层判定"没有语音"就不会上屏：音频长度需超过 `min_speech_duration`、
+Silero VAD 需检出人声、识别片段的 `no_speech_prob` 需低于阈值。
+
+注意 VAD 只做"有没有人声"的判断，**不会裁剪音频**：裁剪会切掉弱读音节，导致
+识别丢字。
+
+如果识别结果经常为空或丢字（多见于麦克风电平偏低），可放宽 VAD：
+
+```yaml
+asr:
+  vad:
+    enabled: true
+    silence_threshold: 0.25   # 默认 0.3, 调小更宽松
+```
+
+如果环境噪声大、容易误识别，则调大该值（如 `0.5`）。
 
 ## 📝 开发计划
 

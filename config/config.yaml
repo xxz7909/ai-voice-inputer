@@ -24,9 +24,12 @@ asr:
   
   # VAD (语音活动检测) 配置
   vad:
+    # 是否启用 VAD 门禁: 开启后先判断录音里有没有人声, 没有就直接跳过识别
+    # 建议保持开启, 否则不说话时 Whisper 可能输出幻觉文本并自动上屏
     enabled: true
-    # 静音阈值 (秒)
-    silence_threshold: 0.5
+    # VAD 语音判定阈值 (0~1): 越大越严格
+    # 识别结果经常为空/丢字(麦克风电平偏低)时调小, 环境噪声大时调大
+    silence_threshold: 0.3
     # 最小语音长度 (秒)
     min_speech_duration: 0.3
 
@@ -100,8 +103,8 @@ logging:
 
 # 通知配置
 notification:
-  # 是否显示桌面通知
-  enabled: true
+  # 是否显示桌面通知 (关闭后只把文字输入到光标处, 不弹任何提示)
+  enabled: false
   
   # 通知方式: notify-send, libnotify
   method: "notify-send"

@@ -8,7 +8,11 @@ Type=simple
 ExecStart=/home/wzx/桌面/voice-inputer/ai-voice-inputer/run.sh
 Restart=on-failure
 RestartSec=5
-Environment=DISPLAY=:0
+# DISPLAY/XAUTHORITY 由 install.sh 在安装时按当前桌面会话写入。
+# 手动使用本文件时请按实际会话设置, 例如:
+#   Environment=DISPLAY=:1
+#   Environment=XAUTHORITY=/run/user/1000/gdm/Xauthority
+# 两者留空时, 程序会从 /tmp/.X11-unix 自动探测可用显示器。
 
 [Install]
 WantedBy=default.target

@@ -16,6 +16,12 @@ import time
 from pathlib import Path
 from typing import Optional
 
+from .x11_display import ensure_x_display
+
+# 必须在导入 pynput (热键监听) 之前确定 DISPLAY,
+# 否则连接不到 X server 时会在 import 阶段直接抛 ImportError
+X_DISPLAY_AVAILABLE = ensure_x_display()
+
 from .config_manager import ConfigManager, get_config, Config
 from .asr_service import ASRServiceFactory, ASRService
 from .audio_recorder import AudioRecorder, AudioConfig, AudioRecorderManager
@@ -96,7 +102,10 @@ class VoiceInputer:
             model_name=self.config.asr.model,
             device=self.config.asr.device,
             compute_type=self.config.asr.compute_type,
-            language=self.config.asr.language
+            language=self.config.asr.language,
+            vad_enabled=self.config.asr.vad.enabled,
+            vad_threshold=self.config.asr.vad.silence_threshold,
+            min_speech_duration=self.config.asr.vad.min_speech_duration
         )
         
         # 初始化音频录制器
@@ -258,6 +267,18 @@ class VoiceInputer:
     
     def run(self):
         """运行服务（阻塞）"""
+        # X11 环境检查: DISPLAY 不可用时热键和文字输入都无法工作
+        if not X_DISPLAY_AVAILABLE:
+            print(
+                "错误: 无法连接 X11 显示器 (DISPLAY 不可用)\n"
+                "  请确认在图形界面会话中运行, 例如:\n"
+                "    ./run.sh\n"
+                "  如使用 systemd 自启, 需要保证服务能拿到正确的 "
+                "DISPLAY/XAUTHORITY 环境变量。",
+                file=sys.stderr
+            )
+            raise SystemExit(1)
+        
         self.initialize()
         self.start()
         

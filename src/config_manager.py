@@ -14,7 +14,7 @@ from typing import List, Optional
 class ASRVADConfig:
     """VAD 配置"""
     enabled: bool = True
-    silence_threshold: float = 0.5
+    silence_threshold: float = 0.3
     min_speech_duration: float = 0.3
 
 
@@ -71,7 +71,7 @@ class LoggingConfig:
 @dataclass
 class NotificationConfig:
     """通知配置"""
-    enabled: bool = True
+    enabled: bool = False
     method: str = "notify-send"
 
 
